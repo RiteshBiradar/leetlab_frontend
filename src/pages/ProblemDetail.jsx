@@ -5,6 +5,8 @@ import { Button } from "../components/ui/button.jsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs.jsx";
 import axios from "axios";
 import Editor from "@monaco-editor/react";
+import { getLanguageId } from "../libs/languageMap.js";
+import { getStarterCode } from "../libs/starterCode.js";
 
 function ProblemDetail() {
   const { title } = useParams();
@@ -13,8 +15,34 @@ function ProblemDetail() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [submissions, setSubmissions] = useState([]);
-  const userId = "ca2795ac-ea73-4c39-a571-1f51852b8d8b";
- 
+  const [userId,setUserId] = useState("");
+  const [language,setLanguage] = useState("Java");
+
+
+  useEffect(() => {
+  if (problem) {
+    setCode(getStarterCode(language));
+  }
+}, [language]);
+
+
+   useEffect(()=>{
+    async function fetchUser(){
+      try{
+        const res = axios.get("http://localhost:8080/api/v1/auth/check",{
+          withCredentials : true,
+        });
+        setUserId(res.data.user.id)
+      }
+      catch(err){
+        console.log("Error fetching user",err)
+      }
+    }
+    fetchUser();
+   },[])
+
+
+
   useEffect(() => {
     async function fetchProblemById() {
       try {
@@ -24,7 +52,7 @@ function ProblemDetail() {
         const problem = res.data.problem;
   
         setProblem(problem);
-        setCode(problem.starterCode); // set code after problem is fetched
+        setCode(getStarterCode(language)); 
       } catch (err) {
         console.error("Error while fetching data:", err.message);
       }
@@ -70,7 +98,7 @@ async function handleRun() {
   setIsRunning(true);
   try {
     const res = await axios.post("http://localhost:8080/api/v1/execute-code/", {
-      languageId: 62, // or dynamic
+      languageId: getLanguageId(language), 
       source_code: code,
       stdin: problem.testcases.map(tc => tc.input), 
       expected_outputs: problem.testcases.map(tc => tc.output),
@@ -125,6 +153,15 @@ async function handleRun() {
             <Play className="w-4 h-4 mr-2 mt-1" />
             {isRunning ? "Running..." : "Run Code"}
           </Button>
+          <select
+  value={language}
+  onChange={(e) => setLanguage(e.target.value)}
+  className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 shadow-sm transition"
+>
+  <option value="Java">Java</option>
+  <option value="JavaScript">JavaScript</option>
+  <option value="Python">Python</option>
+</select>
         </div>
       </nav>
 
@@ -223,7 +260,8 @@ async function handleRun() {
 <TabsContent value="code" className="flex min-h-[500px]">
   <Editor
     height="100%"
-    defaultLanguage="java" // or dynamically set this
+    defaultLanguage={language.toLowerCase()}
+    language={language.toLowerCase()} 
     value={code}
     onChange={(newCode) => setCode(newCode)}
     theme="vs-dark"

@@ -4,12 +4,13 @@ import { Filter, Search, CheckCircle2, Circle, Clock } from "lucide-react";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import axios from "axios"
+import { useNavigate } from "react-router-dom";
 
 function ProblemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState("All");
   const [problems,setProblems] = useState([]);
-
+  const navigate = useNavigate();
 const generateText = (title) => {
   return title
     .split("-")
@@ -19,7 +20,6 @@ const generateText = (title) => {
 
   const slugify = (title) => title.replace(/\s+/g,' ');
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(()=>{
   async function fetchProblems() {
@@ -29,6 +29,7 @@ const generateText = (title) => {
       });
       console.log("Problems ", res)
       setProblems(res.data.problems);
+      isLoggedIn(true); 
     }
     catch(err){
       console.log("Error while fetching data", err.message);
@@ -37,11 +38,6 @@ const generateText = (title) => {
   fetchProblems();    
   },[])
 
-
-  setInterval(()=>{
-    if(problems.length>0) setIsLoggedIn(true)
-    else setIsLoggedIn(false);
-  },1000)
 
   console.log(problems)
   const filteredProblems = problems.filter((problem) => {
@@ -58,25 +54,36 @@ const generateText = (title) => {
   }
 
   function getStatusIcon(status) {
-    if (status === "solved") return <CheckCircle2 className="w-5 h-5 text-green-600" />;
-    if (status === "attempted") return <Clock className="w-5 h-5 text-yellow-600" />;
+    if (status === "Accepted") return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+    if (status === "Failed") return <Clock className="w-5 h-5 text-yellow-600" />;
     return <Circle className="w-5 h-5 text-gray-400" />;
   }
-
+  if (problems.length==0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Please signup before solving problems</h1>
+          <Link to="/signup">
+            <Button>SignUp</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <nav className="flex justify-between items-center p-6">
       <div></div>
 <div className="flex items-center space-x-4 ml-auto">
-  {isLoggedIn ? (
+  {(
     <Button
       onClick={async () => {
         try {
-          await axios.post("http://localhost:8080/api/v1/auth/logout", {}, {
+          await axios.get("http://localhost:8080/api/v1/auth/logout",{
             withCredentials: true,
           });
-          setIsLoggedIn(false);
+          navigate("/");
         } catch (err) {
           console.log("Logout failed", err.message);
         }
@@ -84,15 +91,6 @@ const generateText = (title) => {
     >
       Logout
     </Button>
-  ) : (
-    <>
-      <Link to="/login">
-        <Button variant="outline">Login</Button>
-      </Link>
-      <Link to="/signup">
-        <Button>Sign Up</Button>
-      </Link>
-    </>
   )}
 </div>
 
@@ -149,7 +147,7 @@ const generateText = (title) => {
               className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 hover:bg-blue-50 transition-colors"
             >
               <div className="col-span-1 flex items-center">
-                {getStatusIcon((problem.status=="Accepted"))}
+                {getStatusIcon((problem.status))}
               </div>
               <div className="col-span-6 flex items-center">
                 <span className="font-medium text-gray-800 hover:text-blue-600">
@@ -165,7 +163,7 @@ const generateText = (title) => {
               
               <div className="col-span-3 flex items-center text-gray-600">
                 <span className="text-sm">
-                  {Math.floor(Math.random() * 40 + 30)}%
+                  32%
                 </span>
               </div>
             </Link>
