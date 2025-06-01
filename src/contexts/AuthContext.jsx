@@ -24,26 +24,25 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // Optional: Check auth status on mount
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     try {
-  //       const res = await fetch('http://localhost:8080/api/v1/auth/me', {
-  //         method: 'GET',
-  //         credentials: 'include',
-  //       });
+useEffect(() => {
+  const checkAuth = async () => {
+    try {
+      const res = await api.get("/auth/check");
+      login(res.data.user); 
+    } catch (err) {
+      try {
+        await api.get("/auth/refreshToken"); 
+        const res = await api.get("/auth/check"); 
+        login(res.data.user);
+      } catch (refreshErr) {
+        logout();
+      }
+    }
+  };
 
-  //       if (!res.ok) throw new Error("Not logged in");
+  checkAuth();
+}, []);
 
-  //       const data = await res.json();
-  //       login({ name: data.name, email: data.email });
-  //     } catch (err) {
-  //       logout();
-  //     }
-  //   };
-
-  //   checkAuth();
-  // }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>

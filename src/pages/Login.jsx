@@ -5,6 +5,9 @@ import { Code } from "lucide-react";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import toast from "react-hot-toast";
+import api from "../api/axios.js";
+
 
 function LoginPage() {
   const [formData, setFormData] = useState({
@@ -25,42 +28,24 @@ const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (!formData.email || !formData.password) {
-    alert("Please fill in all fields");
+    toast.error("Please fill in all fields");
     return;
   }
 
   try {
-    const response = await fetch("http://localhost:8080/api/v1/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(formData),
-    });
+    const response = await api.post("/auth/login", formData); 
+    const { user } = response.data; 
 
-    let data;
-    try {
-      data = await response.json();
-    } catch (err) {
-      throw new Error("Response is not valid JSON");
-    }
-
-    if (!response.ok) {
-      throw new Error(data.message || `Login failed: ${response.status}`);
-    }
-   
     login({
-      email: data.user.email,
-      name: data.user.name,
-
+      email: user.email,
+      name: user.name,
     });
 
-    alert("Login successful!");
+    toast.success("Login successful!");
     navigate("/problems");
   } catch (err) {
     console.error("Login error:", err);
-    alert(err.message); // now you'll see: Please check your email...
+    toast.error(err.response?.data?.message || "Login failed");
   }
 };
 

@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Code } from "lucide-react";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
-import { useAuth } from "../contexts/AuthContext.jsx";
+import toast from "react-hot-toast"
+import api from "../api/axios.js";
 
 function SignupPage() {
   const [formData, setFormData] = useState({
@@ -11,7 +12,6 @@ function SignupPage() {
     email: "",
     password: ""
   });
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,36 +23,19 @@ function SignupPage() {
 
  const handleSubmit = async (e) => {
   e.preventDefault();
-  console.log("Signup data:", formData);
-
-  const { name, email, password } = formData;
-
-  if (!name || !email || !password) {
-    alert("Please fill in all fields");
+  if (!formData.name || !formData.email || !formData.password) {
+    toast.error("Please fill in all fields");
     return;
   }
-
+  setLoading(true);
   try {
-    const response = await fetch("http://localhost:8080/api/v1/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name, email, password })
-    });
-
-    if (!response.ok) {
-      throw new Error("Signup failed");
-    }
-
-    const data = await response.json(); 
-    console.log("Signup success:", data);
-
-    alert("Signup successful!");
+    const response = await api.post("/auth/register", formData);
+    toast.success("Signup completed successfully");
     navigate("/login");
   } catch (err) {
-    console.error("Signup error:", err);
-    alert("Signup failed. Try again.");
+    toast.error(err.response?.data?.message || "Signup failed");
+  } finally {
+    setLoading(false);
   }
 };
 
