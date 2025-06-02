@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
 useEffect(() => {
   const checkAuth = async () => {
     try {
-      const res = await api.get("/auth/check");
+      const res = await axios.get("/auth/check");
       login(res.data.user); 
     } catch (err) {
       try {

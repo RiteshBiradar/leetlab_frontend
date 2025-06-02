@@ -40,7 +40,7 @@ const handleSubmit = async (e) => {
       email: user.email,
       name: user.name,
     });
-
+    // login(response.data.user);
     toast.success("Login successful!");
     navigate("/problems");
   } catch (err) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Filter, Search, CheckCircle2, Circle, Clock } from "lucide-react";
+import { Search, Filter, CheckCircle2, Circle, Clock, LogOut, Code } from "lucide-react";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import toast from "react-hot-toast";
@@ -9,7 +9,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 
 function ProblemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState("All");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
@@ -29,15 +29,16 @@ function ProblemsPage() {
 
   const filteredProblems = problems.filter((problem) => {
     const matchesSearch = problem.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = difficultyFilter === "All" || problem.difficulty === difficultyFilter;
+    const matchesDifficulty =
+      difficultyFilter === "all" || problem.difficulty.toLowerCase() === difficultyFilter;
     return matchesSearch && matchesDifficulty;
   });
 
   const getDifficultyColor = (difficulty) => {
-    if (difficulty === "Easy") return "text-green-600 bg-green-50 border-green-200";
-    if (difficulty === "Medium") return "text-yellow-600 bg-yellow-50 border-yellow-200";
-    if (difficulty === "Hard") return "text-red-600 bg-red-50 border-red-200";
-    return "text-gray-600 bg-gray-50 border-gray-200";
+    if (difficulty === "Easy") return "bg-green-100 text-green-700 border-green-200";
+    if (difficulty === "Medium") return "bg-yellow-100 text-yellow-700 border-yellow-200";
+    if (difficulty === "Hard") return "bg-red-100 text-red-700 border-red-200";
+    return "bg-gray-100 text-gray-700 border-gray-200";
   };
 
   const getStatusIcon = (status) => {
@@ -52,12 +53,10 @@ function ProblemsPage() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  const slugify = (title) => title.toLowerCase().replace(/\s+/g, "-");
-
   const handleLogout = async () => {
     try {
       await api.get("/auth/logout");
-      logout(); 
+      logout();
       toast.success("Logged out successfully");
       navigate("/");
     } catch (err) {
@@ -65,106 +64,132 @@ function ProblemsPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            Please sign up before solving problems
-          </h1>
-          <Link to="/signup">
-            <Button>Sign Up</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="flex justify-end items-center p-6">
-        <Button onClick={handleLogout}>Logout</Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
+        <div className="flex items-center space-x-2">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <Code className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+            CodeChallenge
+          </span>
+        </div>
+        <Button variant="ghost" className="hover:bg-blue-50 flex items-center space-x-2" onClick={handleLogout}>
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </Button>
       </nav>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Problems</h1>
-          <p className="text-gray-600">Solve coding challenges and improve your skills</p>
+        {/* Page Title */}
+        <div className="text-center mb-12">
+  
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 flex justify-center items-center gap-2 text-center">
+            Coding
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Problems
+            </span>
+          </h1>
+
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Solve coding challenges and improve your programming skills
+          </p>
         </div>
 
-        {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search problems..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full"
+                className="pl-12 h-12 text-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 w-full"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-400" />
+
+            {/* Native select instead of custom Select */}
+            <div className="relative w-full sm:w-[200px]">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               <select
                 value={difficultyFilter}
                 onChange={(e) => setDifficultyFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded"
+                className="appearance-none w-full h-12 pl-10 pr-4 border border-gray-200 rounded-xl text-gray-700 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="All">All Difficulties</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
+                <option value="all">All Difficulties</option>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* Problems List */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b font-medium text-gray-700 text-sm">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          {/* Header */}
+          <div className="grid grid-cols-12 gap-4 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100 text-sm font-semibold text-gray-700">
             <div className="col-span-1">Status</div>
             <div className="col-span-6">Title</div>
-            <div className="col-span-2">Difficulty</div>
-            <div className="col-span-3">Acceptance</div>
+            <div className="col-span-3">Difficulty</div>
+            <div className="col-span-2">Acceptance</div>
           </div>
 
-          {filteredProblems.map((problem) => (
-            <Link
+          {/* Problems */}
+          {filteredProblems.map((problem, index) => (
+            <div
               key={problem.id}
-              to={`/problems/${slugify(problem.title)}`}
-              className="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 hover:bg-blue-50 transition-colors"
+              className={`grid grid-cols-12 gap-4 p-6 hover:bg-blue-50 transition-all duration-200 cursor-pointer group ${
+                index !== filteredProblems.length - 1 ? "border-b border-gray-100" : ""
+              }`}
+              onClick={() => navigate(`/problems/${problem.title.toLowerCase().replace(/\s+/g, "-")}`)}
             >
-              <div className="col-span-1 flex items-center">
-                {getStatusIcon(problem.status)}
-              </div>
+              <div className="col-span-1 flex items-center">{getStatusIcon(problem.status)}</div>
               <div className="col-span-6 flex items-center">
-                <span className="font-medium text-gray-800 hover:text-blue-600">
+                <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
                   {formatTitle(problem.title)}
                 </span>
               </div>
-              <div className="col-span-2 flex items-center">
+              <div className="col-span-3 flex items-center">
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(
+                  className={`px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(
                     problem.difficulty
                   )}`}
                 >
                   {problem.difficulty}
                 </span>
               </div>
-              <div className="col-span-3 flex items-center text-gray-600">
-                <span className="text-sm">32%</span>
+              <div className="col-span-2 flex items-center">
+                <span className="text-gray-600 font-medium">{problem.acceptance || "N/A"}</span>
               </div>
-            </Link>
+            </div>
           ))}
+
+          {/* Empty State */}
+          {filteredProblems.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-blue-600" />
+              </div>
+              <div className="text-xl font-semibold text-gray-900 mb-2">No problems found</div>
+              <div className="text-gray-600">Try adjusting your search or filter criteria</div>
+            </div>
+          )}
         </div>
 
-        {filteredProblems.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-2">No problems found</div>
-            <div className="text-gray-600">Try adjusting your search or filter criteria</div>
+        {/* Stats */}
+        <div className="mt-8 text-center">
+          <div className="inline-flex items-center px-6 py-3 bg-white rounded-full shadow-lg border border-gray-100">
+            <span className="text-gray-600">
+              Showing <span className="font-semibold text-blue-600">{filteredProblems.length}</span> of{" "}
+              <span className="font-semibold text-blue-600">{problems.length}</span> problems
+            </span>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
