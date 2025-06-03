@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Filter, CheckCircle2, Circle, Clock, LogOut, Code } from "lucide-react";
+import { Search, Filter, CheckCircle2, Circle, Clock, LogOut, Code, User } from "lucide-react";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import toast from "react-hot-toast";
@@ -12,7 +12,7 @@ function ProblemsPage() {
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { logout } = useAuth();
 
   useEffect(() => {
     async function fetchProblems() {
@@ -21,7 +21,7 @@ function ProblemsPage() {
         setProblems(res.data.problems);
       } catch (err) {
         toast.error("Failed to fetch problems");
-        console.error(err);
+        console.log("Failed fetching problems",err);
       }
     }
     fetchProblems();
@@ -77,10 +77,19 @@ function ProblemsPage() {
             CodeChallenge
           </span>
         </div>
+        <div className="flex items-center gap-4">
+        <Link
+          to="/profile"
+          className="hover:bg-blue-50 text-gray-700 px-4 py-2 rounded-xl flex items-center space-x-2 border border-transparent transition duration-200"
+        >
+        <User className="w-4 h-4" />
+        <span>Profile</span>
+        </Link>
         <Button variant="ghost" className="hover:bg-blue-50 flex items-center space-x-2" onClick={handleLogout}>
           <LogOut className="w-4 h-4" />
           <span>Logout</span>
         </Button>
+        </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-6 py-8">

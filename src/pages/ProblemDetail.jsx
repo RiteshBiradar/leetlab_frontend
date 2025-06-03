@@ -8,7 +8,6 @@ import { getLanguageId } from "../libs/languageMap.js";
 import { getStarterCode } from "../libs/starterCode.js";
 import toast from "react-hot-toast";
 import api from "../api/axios.js";
-import { useAuth } from "../contexts/AuthContext";
 
 
 function ProblemDetail() {
@@ -18,24 +17,43 @@ function ProblemDetail() {
   const [isRunning, setIsRunning] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [language, setLanguage] = useState("Java");
-  const {user} = useAuth();
+  const [user,setUser] = useState([]);
   
-  useEffect(() => {
-    api.get(`/problems/getProblem/${title}`)
-      .then((res) => {
-        const fetchedProblem = res.data.problem;
-        setProblem(fetchedProblem);
-        setCode(getStarterCode(language));
-      })
-      .catch((err) => console.error("Error fetching problem:", err.message));
-  }, [title]);
+useEffect(() => {
+  const fetchInitialData = async () => {
+    try {
+      const [userRes, problemRes] = await Promise.all([
+        api.get("/auth/check"),
+        api.get(`/problems/getProblem/${title}`)
+      ]);
+
+      setUser(userRes.data.user);
+      setProblem(problemRes.data.problem);
+      setCode(getStarterCode(language));
+    } catch (err) {
+      console.error("Initial data fetch failed", err);
+      toast.error("Failed to load problem or user");
+    }
+  };
+
+  fetchInitialData();
+}, []);
 
 
   useEffect(() => {
     if (!problem?.id || !user?.id) return;
-    api.get(`/submission/getSubmission/${problem.id}`, { params:  user.id })
-      .then((res) => setSubmissions(res.data.submissions || []))
-      .catch((err) => console.error("Error fetching submissions:", err.message));
+    async function fetchSubmission() {
+        try {
+        const res = await api.get(`submission/getSubmission/${problem.id}`, {
+          userId: user.id ,
+        });
+            setSubmissions(res.data.submissions)
+        } catch (error) {
+            console.log("Error while fetching submissions",error.message)
+            toast.error("Error while fetching submissions")
+        }
+    }
+    fetchSubmission();    
   }, [problem, user]);
 
 

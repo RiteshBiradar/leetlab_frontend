@@ -1,22 +1,21 @@
 import { Link } from "react-router-dom";
 import { Code, ChevronLeft, Trophy, Target, Calendar, TrendingUp } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext.jsx";
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import api from "../api/axios.js";
 
-
-
 function UserProfile() {
-    // const { user } = useAuth();
     const [problems,setProblems] = useState([]);
     const [submissions, setSubmissions] = useState([]);
     const [user,setUser] = useState("");
+    const [solvedProblem,setSolvedProblems] = useState([]);
+
     useEffect(() => {
     async function fetchUser() {
       try {
         const res = await api.get("/auth/check");
-        console.log(res.data)
-        setUser(res.data.user.id);
+        console.log(res.data.user)
+        setUser(res.data.user);
       } catch (err) {
         toast.error("Failed to fetch user");
         console.error(err);
@@ -30,7 +29,7 @@ function UserProfile() {
     async function fetchProblems() {
       try {
         const res = await api.get("/problems/getAllProblems");
-        console.log(res.data)
+      
         setProblems(res.data.problems);
       } catch (err) {
         toast.error("Failed to fetch problems");
@@ -42,19 +41,15 @@ function UserProfile() {
 
 useEffect(() => {
     async function fetchSubmission() {
-
+      if(!user?.id) return;
       try {
         const res = await api.get("/submission/getAllSubmissions",{
-            params : {
                 userId : user.id,
-            }
         });
-        console.log(res.data)
-        console.log(res.data.submission)
+     
         setSubmissions(res.data.submission);
       } catch (err) {
         toast.error("Failed to fetch problems");
-        console.error(err);
          console.log(user.id)
       }
     }
@@ -65,18 +60,48 @@ useEffect(() => {
   console.log("Updated submissions:", submissions);
 }, [submissions]);
  
-  const totalProblems = problems.length;
-  const solvedProblems = submissions.filter(p => p.status === "Accepted").length;
-  const attemptedProblems = submissions.filter(p => p.status === "Wrong Answer").length;
-const easyProblems = problems.filter(problem => {
-  if (problem.difficulty !== "EASY") return false;
 
+    useEffect(() => {
+    async function fetchSolvedProblems() {
+
+      try {
+        const res = await api.get("/problems/getSolvedProblems");
+        setSolvedProblems(res.data.problems);
+      } catch (err) {
+        toast.error("Failed to fetch problems solved by user");
+      }
+    }
+    fetchSolvedProblems();
+  },[]);
+
+  function getCurrentStreak(submissions) {
+  const dateSet = new Set(
+    submissions.map(sub => new Date(sub.createdAt).toDateString())
+  );
+
+  let streak = 0;
+  let currentDate = new Date();
+
+  while (dateSet.has(currentDate.toDateString())) {
+    streak++;
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  return streak;
+  }
+
+  const totalProblems = problems.length;
+  const solvedProblems = solvedProblem.length;
+  const attemptedProblemIds = new Set(submissions.map(s => s.problemId));
+  const attemptedProblems = attemptedProblemIds.size;
+  const easyProblems = problems.filter(problem => {
+  if (problem.difficulty !== "EASY") return false;
 
   const acceptedSubmission = submissions.find(sub => 
     sub.problemId === problem.id && sub.status === "Accepted"
   );
 
-  return !!acceptedSubmission; // true if found
+  return !!acceptedSubmission; 
 }).length;
   const mediumProblems = submissions.filter(p => p.difficulty === "MEDIUM" && p.status === "Accepted").length;
   const hardProblems = submissions.filter(p => p.difficulty === "HARD" && p.status === "Accepted").length;
@@ -181,7 +206,7 @@ const easyProblems = problems.filter(problem => {
               <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#111827", margin: "0" }}>Problems Solved</h3>
             </div>
             <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#2563eb", marginBottom: "0.5rem" }}>
-              {solvedProblems}
+              {solvedProblem.length}
             </div>
             <p style={{ color: "#6b7280", margin: "0" }}>out of {totalProblems} problems</p>
             <div style={{ 
@@ -219,7 +244,7 @@ const easyProblems = problems.filter(problem => {
             <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "0.5rem" }}>
               {attemptedProblems}
             </div>
-            <p style={{ color: "#6b7280", margin: "0" }}>problems in progress</p>
+            <p style={{ color: "#6b7280", margin: "0" }}>problems attempted</p>
           </div>
 
           {/* Streak */}
@@ -234,9 +259,9 @@ const easyProblems = problems.filter(problem => {
               <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#111827", margin: "0" }}>Current Streak</h3>
             </div>
             <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#ef4444", marginBottom: "0.5rem" }}>
-              {Math.floor(Math.random() * 10) + 1}
+              {getCurrentStreak(submissions)}
             </div>
-            <p style={{ color: "#6b7280", margin: "0" }}>days</p>
+            <p style={{ color: "#6b7280", margin: "0" }}>day</p>
           </div>
         </div>
 
@@ -339,14 +364,13 @@ const easyProblems = problems.filter(problem => {
   </h3>
 
   <div style={{ color: "#6b7280" }}>
-    {console.log(submissions)}
     {submissions.length === 0 ? (
       <p>No recent activity</p>
     ) : (
       submissions.slice(0, 5).map((sub, index) => (
         <p key={index} style={{ margin: "0.5rem 0" }}>
-            {console.log(sub)}
-          • {sub.status} "{sub.problem?.title || "Untitled Problem"}" - {formatDate(sub.createdAt)}
+          {console.log(sub)}
+          • {sub.status} {sub.problem?.title || "Untitled Problem"} - {formatDate(sub.createdAt)}
     
         </p>
       ))
