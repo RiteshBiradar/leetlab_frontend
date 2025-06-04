@@ -1,351 +1,242 @@
-import { Link } from "react-router-dom";
-import { Code, ChevronLeft, Trophy, Target, Calendar, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, Code, Trophy, Target, Calendar, TrendingUp, Clock, Plus, List } from "lucide-react";
+import api from "../api/axios";
 import { toast } from "react-hot-toast";
-import api from "../api/axios.js";
 
-function UserProfile() {
-    const [problems,setProblems] = useState([]);
-    const [submissions, setSubmissions] = useState([]);
-    const [user,setUser] = useState("");
-    const [solvedProblem,setSolvedProblems] = useState([]);
+export default function UserProfile() {
+  const [problems, setProblems] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [user, setUser] = useState("");
+  const [solvedProblem, setSolvedProblems] = useState([]);
 
-    useEffect(() => {
-    async function fetchUser() {
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const res = await api.get("/auth/check");
-        console.log(res.data.user)
-        setUser(res.data.user);
-      } catch (err) {
-        toast.error("Failed to fetch user");
-        console.error(err);
-      }
-    }
-    fetchUser();
-  }, []);
-    
+        const userRes = await api.get("/auth/check");
+        const user = userRes.data.user;
+        setUser(user);
 
-    useEffect(() => {
-    async function fetchProblems() {
-      try {
-        const res = await api.get("/problems/getAllProblems");
-      
-        setProblems(res.data.problems);
-      } catch (err) {
-        toast.error("Failed to fetch problems");
-        console.error(err);
+        const [problemsRes, submissionsRes, solvedProblemsRes] = await Promise.all([
+          api.get("/problems/getAllProblems"),
+          api.get("/submission/getAllSubmissions", { params: { userId: user.id } }),
+          api.get("/problems/getSolvedProblems"),
+        ]);
+
+        setProblems(problemsRes.data.problems);
+        setSubmissions(submissionsRes.data.submission);
+        setSolvedProblems(solvedProblemsRes.data.problems);
+      } catch (error) {
+        toast.error("Failed to fetch user data");
+        console.error(error);
       }
-    }
-    fetchProblems();
+    };
+
+    fetchData();
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     async function fetchSubmission() {
-      if(!user?.id) return;
+      if (!user?.id) return;
       try {
-        const res = await api.get("/submission/getAllSubmissions",{
-                userId : user.id,
+        const res = await api.get("/submission/getAllSubmissions", {
+          params: { userId: user.id },
         });
-     
         setSubmissions(res.data.submission);
       } catch (err) {
-        toast.error("Failed to fetch problems");
-         console.log(user.id)
+        toast.error("Failed to fetch submissions");
+        console.error(err);
       }
     }
     fetchSubmission();
   }, [user]);
 
-  useEffect(() => {
-  console.log("Updated submissions:", submissions);
-}, [submissions]);
- 
-
-    useEffect(() => {
-    async function fetchSolvedProblems() {
-
-      try {
-        const res = await api.get("/problems/getSolvedProblems");
-        setSolvedProblems(res.data.problems);
-      } catch (err) {
-        toast.error("Failed to fetch problems solved by user");
-      }
+  const getCurrentStreak = () => {
+    const dateSet = new Set(
+      submissions.map((sub) => new Date(sub.createdAt).toDateString())
+    );
+    let streak = 0;
+    let currentDate = new Date();
+    
+    while (dateSet.has(currentDate.toDateString())) {
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
     }
-    fetchSolvedProblems();
-  },[]);
-
-  function getCurrentStreak(submissions) {
-  const dateSet = new Set(
-    submissions.map(sub => new Date(sub.createdAt).toDateString())
-  );
-
-  let streak = 0;
-  let currentDate = new Date();
-
-  while (dateSet.has(currentDate.toDateString())) {
-    streak++;
-    currentDate.setDate(currentDate.getDate() - 1);
-  }
-
-  return streak;
-  }
+    return streak;
+  };
 
   const totalProblems = problems.length;
   const solvedProblems = solvedProblem.length;
-  const attemptedProblemIds = new Set(submissions.map(s => s.problemId));
+  const attemptedProblemIds = new Set(submissions.map((s) => s.problemId));
   const attemptedProblems = attemptedProblemIds.size;
+
   const easyProblems = problems.filter(problem => {
-  if (problem.difficulty !== "EASY") return false;
+    if (problem.difficulty !== "EASY") return false;
+    const acceptedSubmission = submissions.find(sub => 
+      sub.problemId === problem.id && sub.status === "Accepted"
+    );
+    return !!acceptedSubmission; 
+  }).length;
 
-  const acceptedSubmission = submissions.find(sub => 
-    sub.problemId === problem.id && sub.status === "Accepted"
-  );
-
-  return !!acceptedSubmission; 
-}).length;
   const mediumProblems = submissions.filter(p => p.difficulty === "MEDIUM" && p.status === "Accepted").length;
   const hardProblems = submissions.filter(p => p.difficulty === "HARD" && p.status === "Accepted").length;
   
   const solvedPercentage = Math.round((solvedProblems / totalProblems) * 100);
 
-
-
-  function formatDate(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24)); // days
-
-  if (diff === 0) return "today";
-  if (diff === 1) return "1 day ago";
-  return `${diff} days ago`;
-}
-
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24)); // days
+    
+    if (diff === 0) return "today";
+    if (diff === 1) return "1 day ago";
+    return `${diff} days ago`;
+  };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#f9fafb" }}>
-        {console.log(user)}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <nav style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        padding: "1.5rem 2rem", 
-        backgroundColor: "white", 
-        borderBottom: "1px solid #e5e7eb",
-        marginBottom: "2rem"
-      }}>
-        <Link to="/problems" style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          color: "#6b7280", 
-          textDecoration: "none" 
-        }}>
-          <ChevronLeft style={{ width: "1.25rem", height: "1.25rem", marginRight: "0.25rem" }} />
+      <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
+        <Link 
+          to="/problems" 
+          className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5 mr-1" />
           Back to Problems
         </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{ 
-            width: "2rem", 
-            height: "2rem", 
-            backgroundColor: "#2563eb", 
-            borderRadius: "0.5rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <Code style={{ width: "1.25rem", height: "1.25rem", color: "white" }} />
+        <div className="flex items-center space-x-2">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <Code className="w-6 h-6 text-white" />
           </div>
-          <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#2563eb" }}>CodeChallenge</span>
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+            CodeChallenge
+          </span>
         </div>
       </nav>
 
-      <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1.5rem" }}>
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Profile Header */}
-        <div style={{ 
-          backgroundColor: "white", 
-          borderRadius: "0.5rem", 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          padding: "2rem",
-          marginBottom: "2rem"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{
-              width: "4rem",
-              height: "4rem",
-              backgroundColor: "#2563eb",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              color: "white"
-            }}>
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+          <div className="flex items-center gap-6 mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center text-3xl font-bold text-white shadow-lg">
               {user?.name?.charAt(0).toUpperCase() || "U"}
             </div>
             <div>
-              <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#111827", margin: "0" }}>
-                {user?.name || "User"}
-              </h1>
-              <p style={{ color: "#6b7280", margin: "0.25rem 0 0 0" }}>{user?.email}</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{user?.name || "User"}</h1>
+              <p className="text-xl text-gray-600 mb-1">{user?.email}</p>
+              {console.log(user)}
+              <p className="text-gray-500">Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</p>
             </div>
-          </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
-          {/* Problems Solved */}
-          <div style={{ 
-            backgroundColor: "white", 
-            borderRadius: "0.5rem", 
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            padding: "1.5rem"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-              <Trophy style={{ width: "1.5rem", height: "1.5rem", color: "#f59e0b" }} />
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#111827", margin: "0" }}>Problems Solved</h3>
-            </div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#2563eb", marginBottom: "0.5rem" }}>
-              {solvedProblem.length}
-            </div>
-            <p style={{ color: "#6b7280", margin: "0" }}>out of {totalProblems} problems</p>
-            <div style={{ 
-              backgroundColor: "#e5e7eb", 
-              borderRadius: "9999px", 
-              height: "0.5rem", 
-              marginTop: "1rem",
-              width: "100%",       
-              overflow: "hidden",  
-              boxSizing: "border-box" 
-            }}>
-              <div style={{ 
-                backgroundColor: "#10b981", 
-                height: "100%", 
-                borderRadius: "9999px",
-                width: `${solvedPercentage}%`
-              }}></div>
-            </div>
-            <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.5rem", margin: "0.5rem 0 0 0" }}>
-              {solvedPercentage}% completion rate
-            </p>
-          </div>
-
-          {/* Problems Attempted */}
-          <div style={{ 
-            backgroundColor: "white", 
-            borderRadius: "0.5rem", 
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            padding: "1.5rem"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-              <Target style={{ width: "1.5rem", height: "1.5rem", color: "#f59e0b" }} />
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#111827", margin: "0" }}>Attempted</h3>
-            </div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "0.5rem" }}>
-              {attemptedProblems}
-            </div>
-            <p style={{ color: "#6b7280", margin: "0" }}>problems attempted</p>
-          </div>
-
-          {/* Streak */}
-          <div style={{ 
-            backgroundColor: "white", 
-            borderRadius: "0.5rem", 
-            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            padding: "1.5rem"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-              <Calendar style={{ width: "1.5rem", height: "1.5rem", color: "#ef4444" }} />
-              <h3 style={{ fontSize: "1.125rem", fontWeight: "600", color: "#111827", margin: "0" }}>Current Streak</h3>
-            </div>
-            <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#ef4444", marginBottom: "0.5rem" }}>
-              {getCurrentStreak(submissions)}
-            </div>
-            <p style={{ color: "#6b7280", margin: "0" }}>day</p>
-          </div>
-        </div>
-
-        {/* Difficulty Breakdown */}
-        <div style={{ 
-          backgroundColor: "white", 
-          borderRadius: "0.5rem", 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          padding: "1.5rem",
-          marginBottom: "2rem"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
-            <TrendingUp style={{ width: "1.5rem", height: "1.5rem", color: "#8b5cf6" }} />
-            <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#111827", margin: "0" }}>
-              Problems Solved by Difficulty
-            </h3>
           </div>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem" }}>
-            {/* Easy */}
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: "2rem", 
-                fontWeight: "bold", 
-                color: "#10b981",
-                marginBottom: "0.5rem"
-              }}>
-                {easyProblems}
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+              <div className="text-2xl font-bold text-blue-600">{solvedProblems}</div>
+              <div className="text-sm text-gray-600">Solved</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
+              <div className="text-2xl font-bold text-green-600">{solvedPercentage}%</div>
+              <div className="text-sm text-gray-600">Success Rate</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl">
+              <div className="text-2xl font-bold text-yellow-600">{attemptedProblems}</div>
+              <div className="text-sm text-gray-600">Attempted</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl">
+              <div className="text-2xl font-bold text-red-600">{getCurrentStreak()}</div>
+              <div className="text-sm text-gray-600">Day Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-green-600" />
               </div>
-              <div style={{ 
-                display: "inline-block",
-                padding: "0.25rem 0.75rem",
-                backgroundColor: "#dcfce7",
-                color: "#166534",
-                borderRadius: "9999px",
-                fontSize: "0.875rem",
-                fontWeight: "500"
-              }}>
+              <h3 className="text-xl font-bold text-gray-900">Problems Solved</h3>
+            </div>
+            <div className="text-4xl font-bold text-green-600 mb-2">{solvedProblems}</div>
+            <p className="text-gray-600 mb-4">out of {totalProblems} problems</p>
+            <div className="bg-gray-200 rounded-full h-3 mb-2 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-500"
+                style={{ width: `${solvedPercentage}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-500">{solvedPercentage}% completion rate</p>
+          </div>
+
+<div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+  <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center">
+                <List className="w-6 h-6 text-yellow-600" />
+          </div>
+  <h3 className="text-xl font-bold text-gray-900">Manage Playlists</h3>
+  </div>
+  <div className="flex flex-col gap-4 mt-4">
+    <Link 
+      to="/view-playlists"
+      className="w-full flex justify-center items-center gap-2 py-3 px-6 bg-yellow-500 text-white no-underline rounded-md text-sm font-medium transition-colors hover:bg-yellow-600"
+    >
+      <List className="w-4 h-8" />
+      View Playlists
+    </Link>
+
+    <Link 
+      to="/create-playlist"
+      className="w-full flex justify-center items-center gap-2 py-3 px-6 bg-blue-600 text-white no-underline rounded-md text-sm font-medium transition-colors hover:bg-blue-700"
+    >
+      <Plus className="w-4 h-8" />
+      Create Playlist
+    </Link>
+  </div>
+</div>
+
+
+          
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Current Streak</h3>
+            </div>
+            <div className="text-4xl font-bold text-red-600 mb-2">{getCurrentStreak()}</div>
+            <p className="text-gray-600">days</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-purple-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">Problems Solved by Difficulty</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Easy */}
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border border-green-200">
+              <div className="text-4xl font-bold text-green-600 mb-4">{easyProblems}</div>
+              <div className="inline-block px-4 py-2 bg-green-200 text-green-800 rounded-full text-sm font-semibold">
                 Easy
               </div>
             </div>
-
+            
             {/* Medium */}
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: "2rem", 
-                fontWeight: "bold", 
-                color: "#f59e0b",
-                marginBottom: "0.5rem"
-              }}>
-                {mediumProblems}
-              </div>
-              <div style={{ 
-                display: "inline-block",
-                padding: "0.25rem 0.75rem",
-                backgroundColor: "#fef3c7",
-                color: "#92400e",
-                borderRadius: "9999px",
-                fontSize: "0.875rem",
-                fontWeight: "500"
-              }}>
+            <div className="text-center p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
+              <div className="text-4xl font-bold text-yellow-600 mb-4">{mediumProblems}</div>
+              <div className="inline-block px-4 py-2 bg-yellow-200 text-yellow-800 rounded-full text-sm font-semibold">
                 Medium
               </div>
             </div>
-
+            
             {/* Hard */}
-            <div style={{ textAlign: "center" }}>
-              <div style={{ 
-                fontSize: "2rem", 
-                fontWeight: "bold", 
-                color: "#ef4444",
-                marginBottom: "0.5rem"
-              }}>
-                {hardProblems}
-              </div>
-              <div style={{ 
-                display: "inline-block",
-                padding: "0.25rem 0.75rem",
-                backgroundColor: "#fee2e2",
-                color: "#991b1b",
-                borderRadius: "9999px",
-                fontSize: "0.875rem",
-                fontWeight: "500"
-              }}>
+            <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+              <div className="text-4xl font-bold text-red-600 mb-4">{hardProblems}</div>
+              <div className="inline-block px-4 py-2 bg-red-200 text-red-800 rounded-full text-sm font-semibold">
                 Hard
               </div>
             </div>
@@ -353,33 +244,53 @@ useEffect(() => {
         </div>
 
         {/* Recent Activity */}
-<div style={{ 
-  backgroundColor: "white", 
-  borderRadius: "0.5rem", 
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-  padding: "1.5rem"
-}}>
-  <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#111827", marginBottom: "1rem" }}>
-    Recent Activity
-  </h3>
-
-  <div style={{ color: "#6b7280" }}>
-    {submissions.length === 0 ? (
-      <p>No recent activity</p>
-    ) : (
-      submissions.slice(0, 5).map((sub, index) => (
-        <p key={index} style={{ margin: "0.5rem 0" }}>
-          {console.log(sub)}
-          • {sub.status} {sub.problem?.title || "Untitled Problem"} - {formatDate(sub.createdAt)}
-    
-        </p>
-      ))
-    )}
-  </div>
-</div>
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">Recent Activity</h3>
+          </div>
+          <div className="space-y-4">
+            {submissions.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-gray-400 mb-2">No recent activity</div>
+                <div className="text-sm text-gray-500">Start solving problems to see your activity here</div>
+              </div>
+            ) : (
+              submissions.slice(0, 5).map((sub, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-100"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-3 h-3 rounded-full ${sub.status === "Accepted" ? "bg-green-500" : "bg-red-500"}`}
+                    ></div>
+                    <div>
+                      <div className="font-semibold text-gray-900">{sub.problem?.title || "Untitled Problem"}</div>
+                      <div className="text-sm text-gray-600">{sub.status}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-500">{formatDate(sub.createdAt)}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
+
+      {user?.role === "ADMIN" && (
+        <div className="max-w-7xl mx-auto px-6 py-8 text-center">
+          <Link to="/create-problem">
+            <button
+              className="px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              + Create New Problem
+            </button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
-
-export default UserProfile;

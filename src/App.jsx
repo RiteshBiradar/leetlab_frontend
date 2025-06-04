@@ -7,6 +7,8 @@ import SignupPage from './pages/Signup.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 import UserProfile from './pages/UserProfile.jsx'
+import AdminCreateProblem from './pages/AdminCreateProblem.jsx';
+import CreatePlaylist from './pages/CreatePlaylist.jsx';
 export default function App() {
   return (
     <AuthProvider>
@@ -19,6 +21,8 @@ export default function App() {
         <Route path="/problems" element={<ProblemsPage />} />
         <Route path="/problems/:title" element={<ProblemDetail />} />
         <Route path="/profile" element={<UserProfile />} />
+        <Route path="/create-problem" element={<AdminCreateProblem />} />
+        <Route path='/create-playlist' element={<CreatePlaylist/>}/>
       </Routes>
     </Router>
     </AuthProvider>
