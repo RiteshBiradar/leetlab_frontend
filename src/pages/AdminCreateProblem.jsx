@@ -7,25 +7,25 @@ import api from "../api/axios.js"
 
 function AdminCreateProblem() {
   const [problem, setProblem] = useState({
-    title: "",
-    description: "",
-    difficulty: "Easy",
-    tags: [],
-    examples: {
-      PYTHON: { input: "", output: "", explanation: "" },
-      JAVASCRIPT: { input: "", output: "", explanation: "" },
+    "title": "",
+    "description": "",
+    "difficulty": "Easy",
+    "tags": [],
+    "examples": {
+      "PYTHON": { "input": "", "output": "", "explanation": "" },
+      "JAVASCRIPT": { "input": "", "output": "", "explanation": "" },
     },
-    constraints: "",
-    testcases: [{ input: "", output: "" }],
-    codeSnippets: {
-      JAVASCRIPT: "",
-      PYTHON: "",
-      JAVA: "",
+    "constraints": "",
+    "testcases": [{ "input": "", "output": "" }],
+    "codeSnippets": {
+      "JAVASCRIPT": "",
+      "PYTHON": "",
+      "JAVA": "",
     },
-    referenceSolutions: {
-      JAVASCRIPT: "",
-      PYTHON: "",
-      JAVA: "",
+    "referenceSolutions": {
+      "JAVASCRIPT": "",
+      "PYTHON": "",
+      "JAVA": "",
     },
   })
 
@@ -34,7 +34,10 @@ function AdminCreateProblem() {
     const handleSubmit = async (e) => {
     e.preventDefault();
         try {
-            const res = await api.post("http://localhost:8080/api/v1/problems/createProblem", problem);
+          const payload = JSON.parse(JSON.stringify(problem));
+          console.log(payload);
+
+            const res = await api.post("/problems/createProblem",problem);
             alert("Problem created successfully!");
             console.log(res.data);
         } catch (err) {
@@ -134,12 +137,11 @@ function AdminCreateProblem() {
                 <Input
                   value={problem.title}
                   onChange={(e) => setProblem((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., Two Sum"
+                  placeholder="e.g., two-sum"
                   className="h-12 text-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                 <textarea
@@ -380,7 +382,6 @@ function AdminCreateProblem() {
               </div>
             </div>
           ))}
-
           {/* Submit Button */}
           <div className="flex justify-center pt-8">
             <Button

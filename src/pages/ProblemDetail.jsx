@@ -45,7 +45,9 @@ useEffect(() => {
     async function fetchSubmission() {
         try {
         const res = await api.get(`submission/getSubmission/${problem.id}`, {
-          userId: user.id ,
+            params: {
+              userId: user.id,
+            },
         });
             setSubmissions(res.data.submissions)
         } catch (error) {

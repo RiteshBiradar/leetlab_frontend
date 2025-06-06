@@ -141,42 +141,70 @@ function ProblemsPage() {
         {/* Problems List */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-4 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100 text-sm font-semibold text-gray-700">
-            <div className="col-span-1">Status</div>
-            <div className="col-span-6">Title</div>
-            <div className="col-span-3">Difficulty</div>
-            <div className="col-span-2">Acceptance</div>
-          </div>
+          {/* Header */}
+<div className="grid grid-cols-12 gap-4 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100 text-sm font-semibold text-gray-700">
+  <div className="col-span-1">Status</div>
+  <div className="col-span-6">Title</div>
+  <div className="col-span-3">Difficulty</div>
+  <div className="col-span-2">Tags</div>
+</div>
 
-          {/* Problems */}
-          {filteredProblems.map((problem, index) => (
-            <div
-              key={problem.id}
-              className={`grid grid-cols-12 gap-4 p-6 hover:bg-blue-50 transition-all duration-200 cursor-pointer group ${
-                index !== filteredProblems.length - 1 ? "border-b border-gray-100" : ""
-              }`}
-              onClick={() => navigate(`/problems/${problem.title.toLowerCase().replace(/\s+/g, "-")}`)}
-            >
-              <div className="col-span-1 flex items-center">{getStatusIcon(problem.status)}</div>
-              <div className="col-span-6 flex items-center">
-                <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
-                  {formatTitle(problem.title)}
-                </span>
-              </div>
-              <div className="col-span-3 flex items-center">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium border ${getDifficultyColor(
-                    problem.difficulty
-                  )}`}
-                >
-                  {problem.difficulty}
-                </span>
-              </div>
-              <div className="col-span-2 flex items-center">
-                <span className="text-gray-600 font-medium">{problem.acceptance || "N/A"}</span>
-              </div>
-            </div>
-          ))}
+{/* Problems */}
+{filteredProblems.map((problem, index) => (
+  <div
+    key={problem.id}
+    className={`grid grid-cols-12 gap-4 p-6 hover:bg-blue-50 transition-all duration-200 cursor-pointer group ${
+      index !== filteredProblems.length - 1 ? "border-b border-gray-100" : ""
+    }`}
+    onClick={() => navigate(`/problems/${problem.title.toLowerCase().replace(/\s+/g, "-")}`)}
+  >
+    <div className="col-span-1 flex items-center">{getStatusIcon(problem.status)}</div>
+    <div className="col-span-6 flex items-center">
+      <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
+        {formatTitle(problem.title)}
+      </span>
+    </div>
+    <div className="col-span-3 items-center flex flex-wrap gap-2">
+      <span
+      variant = "secondary"
+        className={`text-xs font-medium px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 cursor-default select-none rounded-xl ${getDifficultyColor(
+          problem.difficulty
+        )}`}
+      >
+        {problem.difficulty}
+      </span>
+    </div>
+
+   <div className="col-span-2 flex flex-wrap items-center gap-2">
+  {problem.tags && problem.tags.length > 0 ? (
+    problem.tags.map((tag, i) => {
+      const colors = [
+        "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
+        "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+        "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100",
+        "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100",
+        "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100",
+      ];
+      return (
+        <span
+          key={i}
+          className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-all duration-200 cursor-default select-none ${colors[i % colors.length]}`}
+        >
+          {tag}
+        </span>
+      );
+    })
+  ) : (
+    <span className="text-gray-400 italic text-sm flex items-center gap-1">
+      <Hash className="w-3 h-3" />
+      No tags available
+    </span>
+  )}
+</div>
+
+  </div>
+))}
+
 
           {/* Empty State */}
           {filteredProblems.length === 0 && (
