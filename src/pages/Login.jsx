@@ -55,12 +55,14 @@ const handleSubmit = async (e) => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow p-8">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Code className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-blue-600">CodeChallenge</span>
+          <div className="flex items-center justify-center space-x-1.5 mb-2">
+          <div className="w-6 h-6  flex items-center justify-center bg-white">
+            <img src="../../public/logo.jpeg" alt="Logo"  />
           </div>
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mt-2">
+            ChaiAurDSA
+          </span>
+        </div>
           <h2 className="text-2xl font-bold text-gray-900">Login</h2>
           <p className="text-gray-600">Welcome back!</p>
         </div>

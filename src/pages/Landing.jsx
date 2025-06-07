@@ -13,12 +13,12 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
-        <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-            <Code className="w-6 h-6 text-white" />
+        <div className="flex items-center space-x-1.5">
+          <div className="w-6 h-6  flex items-center justify-center ">
+            <img src="../../public/logo.jpeg" alt="Logo"  />
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-            CodeChallenge
+          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mt-2">
+            ChaiAurDSA
           </span>
         </div>
         <div className="flex items-center space-x-4">
