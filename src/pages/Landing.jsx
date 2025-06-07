@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom"
 import { Code, ArrowRight, Zap, Target, Users, Trophy, BookOpen } from "lucide-react"
 import { Button } from "../components/ui/button.jsx"
-
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 export default function LandingPage() {
+  const [showVideo, setShowVideo] = useState(false);
+
+  const handleWatchDemo = () => {
+    setShowVideo(true);
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
@@ -47,7 +53,7 @@ export default function LandingPage() {
             curated collection of challenges.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Link to="/problems">
+            <Link to="/signup">
               <Button
                 size="lg"
                 className="px-8 py-4 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-xl flex"
@@ -56,11 +62,36 @@ export default function LandingPage() {
                 <ArrowRight className="w-5 h-5 ml-2 mt-1" />
               </Button>
             </Link>
-            <Link to="/demo">
-              <Button size="lg" variant="outline" className="px-8 py-4 text-lg border-2 hover:bg-blue-50">
+              <Button onClick={handleWatchDemo} size="lg" variant="outline" className="px-8 py-4 text-lg border-2 hover:bg-blue-50">
                 Watch Demo
               </Button>
-            </Link>
+              <AnimatePresence>
+        {showVideo && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50"
+          onClick={() => setShowVideo(false)}
+        >
+          <button
+        onClick={() => setShowVideo(false)}
+        className="absolute top-6 right-6 text-white text-3xl font-bold z-50 hover:text-gray-300"
+      >
+        &times;
+      </button>
+        <motion.video
+            src="/demo.mp4"
+            controls
+            autoPlay
+            className="w-[90%] max-w-3xl rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+        />
+      </motion.div>
+)}
+
+      </AnimatePresence>
           </div>
         </div>
 
@@ -157,7 +188,7 @@ export default function LandingPage() {
               <span>Memory: 42.1MB</span>
               <span>Beats 95.2% of solutions</span>
             </div>
-            <Link to="/problems">
+            <Link to="/signup">
             <Button variant="secondary" size="sm">
               Try This Problem
             </Button>
@@ -215,7 +246,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Link to="/problems">
+            <Link to="/signup">
               <Button
                 size="lg"
                 variant="secondary"

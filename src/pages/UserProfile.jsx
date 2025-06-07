@@ -17,14 +17,12 @@ export default function UserProfile() {
         const user = userRes.data.user;
         setUser(user);
 
-        const [problemsRes, submissionsRes, solvedProblemsRes] = await Promise.all([
+        const [problemsRes, solvedProblemsRes] = await Promise.all([
           api.get("/problems/getAllProblems"),
-          api.get("/submission/getAllSubmissions", { params: { userId: user.id } }),
           api.get("/problems/getSolvedProblems"),
         ]);
 
         setProblems(problemsRes.data.problems);
-        setSubmissions(submissionsRes.data.submission);
         setSolvedProblems(solvedProblemsRes.data.problems);
       } catch (error) {
         toast.error("Failed to fetch user data");
@@ -64,29 +62,38 @@ export default function UserProfile() {
     }
     return streak;
   };
+  const problemMap = new Map(problems.map(p => [p.id, p]));
+  const getAcceptedCountByDifficulty = (difficulty) => {
+  const acceptedProblems = new Set();
+
+  submissions.forEach(sub => {
+    if (sub.status !== "Accepted") return;
+
+    const problem = problemMap.get(sub.problemId);
+    if (problem?.difficulty === difficulty) {
+      acceptedProblems.add(sub.problemId); 
+    }
+  });
+
+  return acceptedProblems.size;
+};
 
   const totalProblems = problems.length;
   const solvedProblems = solvedProblem.length;
   const attemptedProblemIds = new Set(submissions.map((s) => s.problemId));
   const attemptedProblems = attemptedProblemIds.size;
 
-  const easyProblems = problems.filter(problem => {
-    if (problem.difficulty !== "EASY") return false;
-    const acceptedSubmission = submissions.find(sub => 
-      sub.problemId === problem.id && sub.status === "Accepted"
-    );
-    return !!acceptedSubmission; 
-  }).length;
+  const easyProblems = getAcceptedCountByDifficulty("EASY");
+  const mediumProblems = getAcceptedCountByDifficulty("MEDIUM");
+  const hardProblems = getAcceptedCountByDifficulty("HARD");
 
-  const mediumProblems = submissions.filter(p => p.difficulty === "MEDIUM" && p.status === "Accepted").length;
-  const hardProblems = submissions.filter(p => p.difficulty === "HARD" && p.status === "Accepted").length;
   
   const solvedPercentage = Math.round((solvedProblems / totalProblems) * 100);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24)); // days
+    const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
     
     if (diff === 0) return "today";
     if (diff === 1) return "1 day ago";
@@ -125,7 +132,7 @@ export default function UserProfile() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">{user?.name || "User"}</h1>
               <p className="text-xl text-gray-600 mb-1">{user?.email}</p>
               {console.log(user)}
-              <p className="text-gray-500">Member since {user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</p>
+              <p className="text-gray-500">Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
           
@@ -137,7 +144,7 @@ export default function UserProfile() {
             </div>
             <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
               <div className="text-2xl font-bold text-green-600">{solvedPercentage}%</div>
-              <div className="text-sm text-gray-600">Success Rate</div>
+              <div className="text-sm text-gray-600">Completion Rate</div>
             </div>
             <div className="text-center p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl">
               <div className="text-2xl font-bold text-yellow-600">{attemptedProblems}</div>
