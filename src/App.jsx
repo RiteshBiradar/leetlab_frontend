@@ -10,6 +10,7 @@ import UserProfile from './pages/UserProfile.jsx'
 import AdminCreateProblem from './pages/AdminCreateProblem.jsx';
 import CreatePlaylist from './pages/CreatePlaylist.jsx';
 import ViewPlaylists from './pages/ViewPlaylist.jsx';
+import EmailVerification from './pages/VerificationEmail.jsx';
 export default function App() {
   return (
     <AuthProvider>
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/create-problem" element={<AdminCreateProblem />} />
         <Route path='/create-playlist' element={<CreatePlaylist/>}/>
         <Route path='/view-playlists' element ={<ViewPlaylists/>}/>
+        <Route path='/verify' element={<EmailVerification/>}/>
       </Routes>
     </Router>
     </AuthProvider>

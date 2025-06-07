@@ -5,14 +5,13 @@ import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import toast from "react-hot-toast";
 import api from "../api/axios.js";
-import { useAuth } from "../contexts/AuthContext.jsx";
+import { getDifficultyColor } from "../libs/languageMap.js";
 
 function ProblemsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     async function fetchProblems() {
@@ -34,12 +33,6 @@ function ProblemsPage() {
     return matchesSearch && matchesDifficulty;
   });
 
-  const getDifficultyColor = (difficulty) => {
-    if (difficulty === "Easy") return "bg-green-100 text-green-700 border-green-200";
-    if (difficulty === "Medium") return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    if (difficulty === "Hard") return "bg-red-100 text-red-700 border-red-200";
-    return "bg-gray-100 text-gray-700 border-gray-200";
-  };
 
   const getStatusIcon = (status) => {
     if (status === "Accepted") return <CheckCircle2 className="w-5 h-5 text-green-600" />;
@@ -56,7 +49,6 @@ function ProblemsPage() {
   const handleLogout = async () => {
     try {
       await api.get("/auth/logout");
-      logout();
       toast.success("Logged out successfully");
       navigate("/");
     } catch (err) {

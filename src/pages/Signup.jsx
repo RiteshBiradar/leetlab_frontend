@@ -27,16 +27,14 @@ function SignupPage() {
     toast.error("Please fill in all fields");
     return;
   }
-  setLoading(true);
+
   try {
     const response = await api.post("/auth/register", formData);
     toast.success("Signup completed successfully");
-    navigate("/login");
+    navigate("/verify",{ state: { email: formData.email } });
   } catch (err) {
     toast.error(err.response?.data?.message || "Signup failed");
-  } finally {
-    setLoading(false);
-  }
+  } 
 };
 
   return (

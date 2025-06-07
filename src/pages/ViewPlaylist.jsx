@@ -18,12 +18,10 @@ function ViewPlaylists() {
   const [expandedPlaylist, setExpandedPlaylist] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch playlists - this is your perfect API call logic
   const fetchPlaylists = async () => {
     setLoading(true);
     try {
       const res = await api.get("/playlist/");
-      // Assuming the perfect API returns data in res.data.playlists
       setPlaylists(res.data.playlists || []);
     } catch (error) {
       toast.error("Error while fetching playlists");
