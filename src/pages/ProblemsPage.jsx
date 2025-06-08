@@ -154,6 +154,11 @@ function ProblemsPage() {
     <div className="col-span-6 flex items-center">
       <span className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors text-lg">
         {formatTitle(problem.title)}
+         {problem.title === "add-two-numbers" && (
+        <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
+          Demo
+        </span>
+        )}
       </span>
     </div>
     <div className="col-span-3 items-center flex flex-wrap gap-2">

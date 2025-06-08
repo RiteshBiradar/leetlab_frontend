@@ -28,7 +28,7 @@ useEffect(() => {
 
       setUser(userRes.data.user);
       setProblem(problemRes.data.problem);
-      setCode(getStarterCode(language));
+      setCode(getStarterCode(language, title));
     } catch (err) {
       console.error("Initial data fetch failed", err);
       toast.error("Failed to load problem or user");
@@ -59,7 +59,7 @@ useEffect(() => {
 }, [problem?.id, user?.id]);
 
   useEffect(() => {
-    if (problem) setCode(getStarterCode(language));
+    if (problem) setCode(getStarterCode(language, problem.title));
   }, [language, problem]);
 
   const generateText = (slug) =>
@@ -93,7 +93,7 @@ useEffect(() => {
     }
   };
 
-  const handleReset = () => setCode(getStarterCode(language));
+  const handleReset = () => setCode(getStarterCode(language, problem.title));
 
   if (!problem) {
     return (
